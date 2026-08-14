@@ -1,6 +1,6 @@
 import { drawText, drawTextInkCenter } from "./render.js";
 import { LEVELS } from "./levels.js";
-import { scoresFor, loadLastName } from "./scores.js";
+import { scoresFor, loadLastName, formatScoreDate } from "./scores.js";
 
 const FONT = 35;
 const FONT_LARGE = 56;
@@ -233,7 +233,13 @@ export class Menus {
       drawText(ctx, "No scores yet", CENTER_X, 350, FONT, "#ff6666", "center");
     } else {
       rows.forEach((row, index) => {
-        drawText(ctx, `${index + 1}.  ${row.name}    ${row.score}`, CENTER_X, 300 + index * 42, FONT, "#ffffff", "center");
+        const y = 300 + index * 42;
+        drawText(ctx, `${index + 1}.  ${row.name}`, CENTER_X - 260, y, FONT, "#ffffff", "left");
+        const date = formatScoreDate(row.at);
+        if (date) {
+          drawText(ctx, date, CENTER_X, y, FONT, "#ffffff", "center");
+        }
+        drawText(ctx, String(row.score), CENTER_X + 260, y, FONT, "#ffffff", "right");
       });
     }
     drawText(ctx, "Press B to return to start menu", bottomBarTextX, bottomBarCy, FONT, "#ffffff", "left", "middle");

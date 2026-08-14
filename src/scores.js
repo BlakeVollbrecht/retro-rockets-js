@@ -35,7 +35,7 @@ export function saveScore(levelName, playerName, score) {
   saveLastName(playerName);
   const table = loadScores();
   const list = table[levelName] || [];
-  list.push({ name: playerName, score });
+  list.push({ name: playerName, score, at: Date.now() });
   list.sort((a, b) => b.score - a.score);
   table[levelName] = list.slice(0, 8);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(table));
@@ -44,4 +44,15 @@ export function saveScore(levelName, playerName, score) {
 
 export function scoresFor(levelName) {
   return loadScores()[levelName] || [];
+}
+
+export function formatScoreDate(at) {
+  if (typeof at !== "number" || !Number.isFinite(at)) return "";
+  const date = new Date(at);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
