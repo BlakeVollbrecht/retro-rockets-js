@@ -1,18 +1,25 @@
+function silentLoop() {
+  return { source: null, gain: { gain: { value: 0 } } };
+}
+
 export class AudioBus {
   constructor(context, sounds) {
     this.context = context;
-    this.sounds = sounds;
-    this.leftRocket = this.createLoop("rumble");
-    this.rightRocket = this.createLoop("rumble");
-    this.lowFuel = this.createLoop("lowFuel");
+    this.sounds = sounds || {};
+    this.leftRocket = silentLoop();
+    this.rightRocket = silentLoop();
+    this.lowFuel = silentLoop();
+    this.loopsReady = false;
     this.playedCrash = false;
     this.playedWin = false;
   }
 
   createLoop(name) {
+    const buffer = this.sounds[name];
+    if (!buffer || this.context.state !== "running") return silentLoop();
     const source = this.context.createBufferSource();
     const gain = this.context.createGain();
-    source.buffer = this.sounds[name];
+    source.buffer = buffer;
     source.loop = true;
     gain.gain.value = 0;
     source.connect(gain);
@@ -21,10 +28,20 @@ export class AudioBus {
     return { source, gain };
   }
 
+  ensureLoops() {
+    if (this.loopsReady || this.context.state !== "running") return;
+    this.leftRocket = this.createLoop("rumble");
+    this.rightRocket = this.createLoop("rumble");
+    this.lowFuel = this.createLoop("lowFuel");
+    this.loopsReady = true;
+  }
+
   play(name, volume = 1) {
+    const buffer = this.sounds[name];
+    if (!buffer || this.context.state !== "running") return;
     const source = this.context.createBufferSource();
     const gain = this.context.createGain();
-    source.buffer = this.sounds[name];
+    source.buffer = buffer;
     gain.gain.value = volume;
     source.connect(gain);
     gain.connect(this.context.destination);
@@ -32,6 +49,7 @@ export class AudioBus {
   }
 
   setLoopVolume(loop, volume) {
+    if (!loop?.gain) return;
     loop.gain.gain.value = Math.max(0, Math.min(1, volume));
   }
 
@@ -50,6 +68,7 @@ export class AudioBus {
   }
 
   updateGame(lander) {
+    this.ensureLoops();
     if (lander.rightThrust > 0) {
       this.setLoopVolume(this.rightRocket, 0.3 + (0.7 * lander.rightThrust) / lander.triggerToThrust);
     } else {

@@ -2,6 +2,32 @@ export function contentUrl(path) {
   return "content/" + path.split("/").map(encodeURIComponent).join("/");
 }
 
+const IMAGE_PATHS = {
+  menuBackground: "Menu/Images/background.jpg",
+  logo: "Menu/Images/logo.png",
+  logoBack: "Menu/Images/logoBack.png",
+  selectionBox: "Menu/Images/selectionBox.png",
+  overlay: "Menu/Images/OverlayMenuBack.png",
+  letterBox: "Menu/Images/LetterSelectBox.png",
+  buttonA: "Menu/Images/xboxControllerButtonA.png",
+  buttonB: "Menu/Images/xboxControllerButtonB.png",
+  lander: "Game/Images/Lander.png",
+  fire: "Game/Images/fire.png",
+  explosion: "Game/Images/explosion.png",
+  gauge: "Game/Images/guage.png",
+  needle: "Game/Images/needle.png",
+};
+
+const SOUND_PATHS = {
+  scroll: "Menu/Sounds/dragonAgeClick.wav",
+  click: "Menu/Sounds/ventriloClick.wav",
+  error: "Menu/Sounds/err.wav",
+  rumble: "Game/Sounds/Rumble Loop.wav",
+  crash: "Game/Sounds/Explosion.wav",
+  lowFuel: "Game/Sounds/Warning Beep.wav",
+  win: "Game/Sounds/win sound.wav",
+};
+
 export function loadImage(path) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -29,46 +55,26 @@ export function getAlphaData(image) {
   return ctx.getImageData(0, 0, image.width, image.height).data;
 }
 
-export async function loadAll(audioContext) {
-  const imagePaths = {
-    menuBackground: "Menu/Images/background.jpg",
-    logo: "Menu/Images/logo.png",
-    logoBack: "Menu/Images/logoBack.png",
-    selectionBox: "Menu/Images/selectionBox.png",
-    overlay: "Menu/Images/OverlayMenuBack.png",
-    letterBox: "Menu/Images/LetterSelectBox.png",
-    buttonA: "Menu/Images/xboxControllerButtonA.png",
-    buttonB: "Menu/Images/xboxControllerButtonB.png",
-    lander: "Game/Images/Lander.png",
-    fire: "Game/Images/fire.png",
-    explosion: "Game/Images/explosion.png",
-    gauge: "Game/Images/guage.png",
-    needle: "Game/Images/needle.png",
-  };
-
-  const soundPaths = {
-    scroll: "Menu/Sounds/dragonAgeClick.wav",
-    click: "Menu/Sounds/ventriloClick.wav",
-    error: "Menu/Sounds/err.wav",
-    rumble: "Game/Sounds/Rumble Loop.wav",
-    crash: "Game/Sounds/Explosion.wav",
-    lowFuel: "Game/Sounds/Warning Beep.wav",
-    win: "Game/Sounds/win sound.wav",
-  };
-
+export async function loadImages() {
   const images = {};
   await Promise.all(
-    Object.entries(imagePaths).map(async ([key, path]) => {
+    Object.entries(IMAGE_PATHS).map(async ([key, path]) => {
       images[key] = await loadImage(path);
     })
   );
+  return images;
+}
 
+export async function loadSounds(audioContext) {
   const sounds = {};
   await Promise.all(
-    Object.entries(soundPaths).map(async ([key, path]) => {
-      sounds[key] = await loadAudioBuffer(audioContext, path);
+    Object.entries(SOUND_PATHS).map(async ([key, path]) => {
+      try {
+        sounds[key] = await loadAudioBuffer(audioContext, path);
+      } catch (error) {
+        console.warn(error);
+      }
     })
   );
-
-  return { images, sounds };
+  return sounds;
 }

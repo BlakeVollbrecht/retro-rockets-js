@@ -1,4 +1,4 @@
-import { loadAll, loadImage, getAlphaData } from "./assets.js";
+import { loadImages, loadSounds, loadImage, getAlphaData } from "./assets.js";
 import { Input } from "./input.js";
 import { Lander } from "./lander.js";
 import { detectCollisions } from "./collision.js";
@@ -100,6 +100,7 @@ function update() {
   if (audioContext && audioContext.state === "suspended") {
     audioContext.resume();
   }
+  if (audio) audio.ensureLoops();
   switch (state) {
     case "StartMenu": {
       const choice = menus.pollStart(input);
@@ -218,11 +219,18 @@ function showLoading(message = "loading") {
 async function boot() {
   showLoading();
   audioContext = new AudioContext();
-  assets = await loadAll(audioContext);
-  landerAlpha = getAlphaData(assets.images.lander);
+  const images = await loadImages();
+  landerAlpha = getAlphaData(images.lander);
   await preloadLevels();
-  audio = new AudioBus(audioContext, assets.sounds);
-  menus = new Menus(assets.images, audio);
+  let sounds = {};
+  try {
+    sounds = await loadSounds(audioContext);
+  } catch (error) {
+    console.warn(error);
+  }
+  assets = { images, sounds };
+  audio = new AudioBus(audioContext, sounds);
+  menus = new Menus(images, audio);
   input = new Input();
   lander = new Lander();
   running = true;
