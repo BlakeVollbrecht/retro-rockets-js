@@ -431,7 +431,7 @@ export class Menus {
     drawText(ctx, "Score:  " + this.score, CENTER_X, 250, FONT, "#ff0000", "center");
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const box = this.images.letterBox;
-    const gap = 12;
+    const gap = -12;
     const startX = CENTER_X - (box.width * 3 + gap * 2) / 2;
     const overlayBottom = 109 + this.images.overlay.height;
     const groupH = FONT + 18 + box.height;
