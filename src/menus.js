@@ -226,14 +226,14 @@ export class Menus {
     ctx.drawImage(this.images.menuBackground, 0, 0);
     const { bottomBarCy, bottomBarTextX } = this.drawMenuChrome(ctx, "High Scores", "B");
     const level = LEVELS[this.highScoreLevel];
-    drawText(ctx, level.name, CENTER_X, 150, FONT, "#ffffff", "center");
-    this.drawScrollChevrons(ctx, 167, this.highScoreLevel, LEVELS.length);
+    drawText(ctx, level.name, CENTER_X, 220, FONT, "#ffffff", "center");
+    this.drawScrollChevrons(ctx, 237, this.highScoreLevel, LEVELS.length);
     const rows = scoresFor(level.name);
     if (rows.length === 0) {
-      drawText(ctx, "No scores yet", CENTER_X, 280, FONT, "#ff6666", "center");
+      drawText(ctx, "No scores yet", CENTER_X, 350, FONT, "#ff6666", "center");
     } else {
       rows.forEach((row, index) => {
-        drawText(ctx, `${index + 1}.  ${row.name}    ${row.score}`, CENTER_X, 230 + index * 42, FONT, "#ffffff", "center");
+        drawText(ctx, `${index + 1}.  ${row.name}    ${row.score}`, CENTER_X, 300 + index * 42, FONT, "#ffffff", "center");
       });
     }
     drawText(ctx, "Press B to return to start menu", bottomBarTextX, bottomBarCy, FONT, "#ffffff", "left", "middle");
