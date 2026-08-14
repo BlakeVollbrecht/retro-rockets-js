@@ -83,6 +83,30 @@ export class Menus {
     ctx.drawImage(img, CENTER_X - midX, textY + FONT / 2 - midY);
   }
 
+  drawScrollChevrons(ctx, y, index, count) {
+    const drawOne = (x, dir, enabled) => {
+      ctx.save();
+      ctx.fillStyle = enabled ? "#ffffff" : "rgba(255, 255, 255, 0.22)";
+      ctx.beginPath();
+      const w = 16;
+      const h = 26;
+      if (dir < 0) {
+        ctx.moveTo(x - w, y);
+        ctx.lineTo(x + 7, y - h / 2);
+        ctx.lineTo(x + 7, y + h / 2);
+      } else {
+        ctx.moveTo(x + w, y);
+        ctx.lineTo(x - 7, y - h / 2);
+        ctx.lineTo(x - 7, y + h / 2);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    };
+    drawOne(260, -1, index > 0);
+    drawOne(1020, 1, index < count - 1);
+  }
+
   drawMenuChrome(ctx, title, button) {
     const img = this.images.logoBack;
     const vis = LOGO_BACK_VISUAL;
@@ -174,6 +198,7 @@ export class Menus {
       ctx.drawImage(preview.background, CENTER_X - w / 2, 370 - h / 2, w, h);
       ctx.drawImage(preview.ground, CENTER_X - w / 2, 370 - h / 2, w, h);
     }
+    this.drawScrollChevrons(ctx, 370, this.levelIndex, LEVELS.length);
     drawText(ctx, level.name, CENTER_X, bottomBarCy, FONT, "#ffffff", "center", "middle");
   }
 
@@ -202,6 +227,7 @@ export class Menus {
     const { bottomBarCy, bottomBarTextX } = this.drawMenuChrome(ctx, "High Scores", "B");
     const level = LEVELS[this.highScoreLevel];
     drawText(ctx, level.name, CENTER_X, 150, FONT, "#ffffff", "center");
+    this.drawScrollChevrons(ctx, 167, this.highScoreLevel, LEVELS.length);
     const rows = scoresFor(level.name);
     if (rows.length === 0) {
       drawText(ctx, "No scores yet", CENTER_X, 280, FONT, "#ff6666", "center");
@@ -248,21 +274,33 @@ export class Menus {
     ctx.restore();
 
     const rows = [
-      ["Action", "Xbox", "Keyboard"],
-      ["Thrust", "Left / Right Trigger", "Q / E"],
-      ["Select", "A", "Enter"],
-      ["Back", "B", "Esc"],
-      ["Pause", "Start", "P"],
-      ["Move", "D-pad / Left Stick", "Arrows / WASD"],
+      { action: "Action", xbox: "Xbox", keyboard: "Keyboard", header: true },
+      { action: "Thrust", xbox: "Left / Right Trigger", keyboard: "Q / E" },
+      { action: "Select", xboxIcon: "buttonA", keyboard: "Enter" },
+      { action: "Back", xboxIcon: "buttonB", keyboard: "Esc" },
+      { action: "Pause", xbox: "Start", keyboard: "P" },
+      { action: "Move", xbox: "D-pad / Left Stick", keyboard: "Arrows / WASD" },
     ];
     const colX = [307, 640, 973];
+    const iconSize = 36;
     rows.forEach((row, index) => {
       const y = 175 + index * 48;
-      const color = index === 0 ? "#ff0000" : "#ffffff";
-      const size = index === 0 ? 28 : 24;
-      row.forEach((cell, col) => {
-        drawText(ctx, cell, colX[col], y, size, color, "center");
-      });
+      const color = row.header ? "#ff0000" : "#ffffff";
+      const size = row.header ? 28 : 24;
+      drawText(ctx, row.action, colX[0], y, size, color, "center");
+      if (row.xboxIcon) {
+        const icon = this.images[row.xboxIcon];
+        ctx.drawImage(
+          icon,
+          colX[1] - iconSize / 2,
+          y + size / 2 - iconSize / 2,
+          iconSize,
+          iconSize
+        );
+      } else {
+        drawText(ctx, row.xbox, colX[1], y, size, color, "center");
+      }
+      drawText(ctx, row.keyboard, colX[2], y, size, color, "center");
     });
     ctx.save();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
