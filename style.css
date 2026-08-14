@@ -2,13 +2,21 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: "Eras Demi ITC";
+  src: url("content/Menu/Fonts/ERASDEMI.TTF") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 html,
 body {
   margin: 0;
   height: 100%;
   background: #000;
   overflow: hidden;
-  font-family: Oswald, "Segoe UI", sans-serif;
+  font-family: "Eras Demi ITC", "Segoe UI", sans-serif;
 }
 
 #stage {

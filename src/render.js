@@ -1,3 +1,5 @@
+const FONT_FAMILY = '"Eras Demi ITC", sans-serif';
+
 export function drawSprite(ctx, image, x, y, options = {}) {
   const {
     rotation = 0,
@@ -20,7 +22,7 @@ export function drawSprite(ctx, image, x, y, options = {}) {
 
 export function drawText(ctx, text, x, y, size, color = "#ff0000", align = "left", baseline = "top") {
   ctx.save();
-  ctx.font = `600 ${size}px Oswald, sans-serif`;
+  ctx.font = `${size}px ${FONT_FAMILY}`;
   ctx.fillStyle = color;
   ctx.textAlign = align;
   ctx.textBaseline = baseline;
@@ -30,7 +32,7 @@ export function drawText(ctx, text, x, y, size, color = "#ff0000", align = "left
 
 export function drawTextInkCenter(ctx, text, x, y, size, color = "#ff0000") {
   ctx.save();
-  ctx.font = `600 ${size}px Oswald, sans-serif`;
+  ctx.font = `${size}px ${FONT_FAMILY}`;
   ctx.fillStyle = color;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
@@ -43,7 +45,7 @@ export function drawTextInkCenter(ctx, text, x, y, size, color = "#ff0000") {
 
 export function textWidth(ctx, text, size) {
   ctx.save();
-  ctx.font = `600 ${size}px Oswald, sans-serif`;
+  ctx.font = `${size}px ${FONT_FAMILY}`;
   const width = ctx.measureText(text).width;
   ctx.restore();
   return width;

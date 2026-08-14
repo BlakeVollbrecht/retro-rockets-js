@@ -224,7 +224,7 @@ function showLoading(message = "loading") {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, 1280, 720);
   ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-  ctx.font = "400 18px Oswald, sans-serif";
+  ctx.font = "18px \"Eras Demi ITC\", sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillText(message, 28, 688);
@@ -232,6 +232,9 @@ function showLoading(message = "loading") {
 
 async function boot() {
   showLoading();
+  if (document.fonts?.load) {
+    await document.fonts.load('35px "Eras Demi ITC"').catch(() => {});
+  }
   audioContext = new AudioContext();
   const images = await loadImages();
   landerAlpha = getAlphaData(images.lander);
