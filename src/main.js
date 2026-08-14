@@ -12,7 +12,6 @@ const STEP = 1000 / 60;
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-const gate = document.getElementById("gate");
 
 let audioContext;
 let assets;
@@ -91,6 +90,9 @@ function frame(time) {
 }
 
 function update() {
+  if (audioContext && audioContext.state === "suspended") {
+    audioContext.resume();
+  }
   switch (state) {
     case "StartMenu": {
       const choice = menus.pollStart(input);
@@ -185,10 +187,19 @@ function draw() {
   }
 }
 
+function showLoading(message = "loading") {
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, 1280, 720);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+  ctx.font = "400 18px Oswald, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(message, 28, 688);
+}
+
 async function boot() {
-  gate.querySelector("p").textContent = "Loading…";
+  showLoading();
   audioContext = new AudioContext();
-  if (audioContext.state === "suspended") await audioContext.resume();
   assets = await loadAll(audioContext);
   landerAlpha = getAlphaData(assets.images.lander);
   await preloadLevels();
@@ -196,24 +207,10 @@ async function boot() {
   menus = new Menus(assets.images, audio);
   input = new Input();
   lander = new Lander();
-  gate.classList.add("hidden");
   running = true;
   requestAnimationFrame(frame);
 }
 
-function armGate() {
-  const start = () => {
-    gate.removeEventListener("click", start);
-    window.removeEventListener("keydown", start);
-    window.removeEventListener("gamepadconnected", start);
-    boot().catch((error) => {
-      gate.classList.remove("hidden");
-      gate.querySelector("p").textContent = error.message;
-    });
-  };
-  gate.addEventListener("click", start);
-  window.addEventListener("keydown", start);
-  window.addEventListener("gamepadconnected", start);
-}
-
-armGate();
+boot().catch((error) => {
+  showLoading(error.message);
+});
