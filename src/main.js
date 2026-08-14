@@ -111,7 +111,6 @@ function update() {
     case "StartMenu": {
       const choice = menus.pollStart(input);
       if (choice === "Start Game") {
-        menus.resetLevelSelect();
         state = "LevelSelectMenu";
       } else if (choice === "High Scores") {
         menus.resetHighScores();
@@ -173,7 +172,6 @@ function update() {
       const name = menus.pollWin(input);
       if (name) {
         saveScore(currentLevelName, name, lander.calculateScore());
-        menus.resetLevelSelect();
         state = "LevelSelectMenu";
       }
       break;

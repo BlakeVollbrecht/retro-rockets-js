@@ -47,10 +47,6 @@ export class Menus {
     this.letterSelection = 0;
   }
 
-  resetLevelSelect() {
-    this.levelIndex = 0;
-  }
-
   resetHighScores() {
     this.highScoreLevel = 0;
   }
