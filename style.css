@@ -1,0 +1,63 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: Oswald, "Segoe UI", sans-serif;
+}
+
+#stage {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+#game {
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  image-rendering: auto;
+  background: #000;
+}
+
+#gate {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  color: #e11;
+  text-align: center;
+  cursor: pointer;
+}
+
+#gate img {
+  width: min(700px, 80vw);
+  margin-bottom: 24px;
+}
+
+#gate p {
+  margin: 8px 0;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+}
+
+#gate .hint {
+  color: #ccc;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+#gate.hidden {
+  display: none;
+}

@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<XnaContent>
+  <Asset Type="StoredContent.Levels">
+    <levelList>
+      <Item>
+        <name>Mars - Cliff</name>
+        <gravity>1.0</gravity>
+        <friction>0.005</friction>
+        <groundImagePath>Game/Images/Grounds/Mars01Ground</groundImagePath>
+        <backgroundImagePath>Game/Images/Backgrounds/MarsBackground</backgroundImagePath>     
+      </Item>
+
+      <Item>
+        <name>Mars - Mountain</name>
+        <gravity>1.0</gravity>
+        <friction>0.005</friction>
+        <groundImagePath>Game/Images/Grounds/Mars02Ground</groundImagePath>
+        <backgroundImagePath>Game/Images/Backgrounds/MarsBackground</backgroundImagePath>
+      </Item>
+
+      <Item>
+        <name>Mars - Boulder Field</name>
+        <gravity>1.0</gravity>
+        <friction>0.005</friction>
+        <groundImagePath>Game/Images/Grounds/Mars03Ground</groundImagePath>
+        <backgroundImagePath>Game/Images/Backgrounds/MarsBackground</backgroundImagePath>
+      </Item>
+
+      <Item>
+        <name>Moon - Overhang</name>
+        <gravity>0.5</gravity>
+        <friction>0.005</friction>
+        <groundImagePath>Game/Images/Grounds/Moon01Ground</groundImagePath>
+        <backgroundImagePath>Game/Images/Backgrounds/MoonBackground</backgroundImagePath>
+      </Item>
+
+      <Item>
+        <name>Moon - Crater</name>
+        <gravity>0.5</gravity>
+        <friction>0.005</friction>
+        <groundImagePath>Game/Images/Grounds/Moon02Ground</groundImagePath>
+        <backgroundImagePath>Game/Images/Backgrounds/MoonBackground</backgroundImagePath>
+      </Item>
+
+      <Item>
+        <name>New Planet - Slope</name>
+        <gravity>1.5</gravity>
+        <friction>0.01</friction>
+        <groundImagePath>Game/Images/Grounds/NewPlanet01Ground</groundImagePath>
+        <backgroundImagePath>Game/Images/Backgrounds/NewPlanetBackground</backgroundImagePath>
+      </Item>
+
+      <Item>
+        <name>New Planet - Uneven</name>
+        <gravity>1.5</gravity>
+        <friction>0.01</friction>
+        <groundImagePath>Game/Images/Grounds/NewPlanet02Ground</groundImagePath>
+        <backgroundImagePath>Game/Images/Backgrounds/NewPlanetBackground</backgroundImagePath>
+      </Item>
+
+      <Item>
+        <name>New Planet - Flying Land</name>
+        <gravity>1.5</gravity>
+        <friction>0.01</friction>
+        <groundImagePath>Game/Images/Grounds/NewPlanet03Ground</groundImagePath>
+        <backgroundImagePath>Game/Images/Backgrounds/NewPlanetBackground</backgroundImagePath>
+      </Item>
+      
+    </levelList>
+  </Asset>
+</XnaContent>
