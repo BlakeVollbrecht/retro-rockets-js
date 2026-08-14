@@ -46,6 +46,35 @@ export function scoresFor(levelName) {
   return loadScores()[levelName] || [];
 }
 
+export function scorePlacement(levelName, score) {
+  const existing = scoresFor(levelName);
+  const betterOrEqual = existing.filter((row) => row.score >= score).length;
+  const rank = betterOrEqual + 1;
+  const above =
+    betterOrEqual > 0
+      ? {
+          rank: betterOrEqual,
+          name: existing[betterOrEqual - 1].name,
+          score: existing[betterOrEqual - 1].score,
+        }
+      : null;
+  const below =
+    betterOrEqual < existing.length
+      ? {
+          rank: rank + 1,
+          name: existing[betterOrEqual].name,
+          score: existing[betterOrEqual].score,
+        }
+      : null;
+  return {
+    rank,
+    above,
+    below,
+    isNewHigh: existing.length > 0 && rank === 1,
+    isLowest: existing.length > 0 && !below,
+  };
+}
+
 export function formatScoreDate(at) {
   if (typeof at !== "number" || !Number.isFinite(at)) return "";
   const date = new Date(at);

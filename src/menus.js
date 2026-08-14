@@ -1,9 +1,11 @@
 import { drawText, drawTextInkCenter } from "./render.js";
 import { LEVELS } from "./levels.js";
-import { scoresFor, loadLastName, formatScoreDate } from "./scores.js";
+import { scoresFor, loadLastName, formatScoreDate, scorePlacement } from "./scores.js";
 
 const FONT = 35;
 const FONT_LARGE = 56;
+const FONT_BANNER = 44;
+const BANNER_COLOR = "#ffd54a";
 const QUIT_NOTICE_FRAMES = 120;
 const CENTER_X = 640;
 // Visible red outline inside selectionBox.png; the rest of the texture is empty.
@@ -24,6 +26,7 @@ export class Menus {
     this.letterPositions = [0, 0, 0];
     this.letterSelection = 0;
     this.score = 0;
+    this.winPlacement = scorePlacement("", 0);
     this.highScoreLevel = 0;
     this.quitNoticeFrames = 0;
   }
@@ -41,10 +44,16 @@ export class Menus {
     this.gameOverSelection = "Restart Level";
   }
 
-  resetWin(score) {
+  resetWin(levelName, score) {
     this.score = score;
+    this.winPlacement = scorePlacement(levelName, score);
     this.letterPositions = [...loadLastName()].map((ch) => ch.charCodeAt(0) - 65);
     this.letterSelection = 0;
+  }
+
+  drawWinRankRow(ctx, row, y, color) {
+    drawText(ctx, `${row.rank}.  ${row.name}`, CENTER_X - 170, y, FONT, color, "left");
+    drawText(ctx, String(row.score), CENTER_X + 170, y, FONT, color, "right");
   }
 
   resetHighScores() {
@@ -424,14 +433,30 @@ export class Menus {
     );
     ctx.restore();
     drawText(ctx, "Safe Landing", CENTER_X, 135, FONT_LARGE, "#ff0000", "center");
-    drawText(ctx, "Score:  " + this.score, CENTER_X, 250, FONT, "#ff0000", "center");
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const place = this.winPlacement;
+    const rankYs = [208, 252, 296];
+    if (place.isNewHigh) {
+      drawText(ctx, "New High Score!", CENTER_X, rankYs[0], FONT_BANNER, BANNER_COLOR, "center");
+    } else if (place.above) {
+      this.drawWinRankRow(ctx, place.above, rankYs[0], "#cc4444");
+    }
+    const liveName =
+      alphabet[this.letterPositions[0]] +
+      alphabet[this.letterPositions[1]] +
+      alphabet[this.letterPositions[2]];
+    this.drawWinRankRow(ctx, { rank: place.rank, name: liveName, score: this.score }, rankYs[1], "#ffffff");
+    if (place.isLowest) {
+      drawText(ctx, "Lowest score ever!", CENTER_X, rankYs[2], FONT_BANNER, BANNER_COLOR, "center");
+    } else if (place.below) {
+      this.drawWinRankRow(ctx, place.below, rankYs[2], "#cc4444");
+    }
     const box = this.images.letterBox;
     const gap = -12;
     const startX = CENTER_X - (box.width * 3 + gap * 2) / 2;
     const overlayBottom = 109 + this.images.overlay.height;
     const groupH = FONT + 18 + box.height;
-    const groupTop = (250 + FONT + overlayBottom - groupH) / 2;
+    const groupTop = (rankYs[2] + FONT + overlayBottom - groupH) / 2;
     drawText(ctx, "Enter Name:", CENTER_X, groupTop, FONT, "#ff0000", "center");
     const boxY = groupTop + FONT + 18;
     const slotX = 3 + 68 / 2;

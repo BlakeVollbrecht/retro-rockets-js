@@ -78,7 +78,7 @@ function updateGame() {
     state = "GameOverMenu";
   } else if (lander.landed) {
     input.rumble(0.25, 0.4, 180);
-    menus.resetWin(lander.calculateScore());
+    menus.resetWin(currentLevelName, lander.calculateScore());
     state = "WinMenu";
   } else {
     const left = lander.leftThrust / lander.triggerToThrust;
