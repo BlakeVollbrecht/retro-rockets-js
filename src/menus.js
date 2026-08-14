@@ -349,6 +349,15 @@ export class Menus {
       drawText(ctx, "Restart Level", CENTER_X, 420, FONT, "#ff0000", "center");
       drawText(ctx, "Main Menu", CENTER_X, 490, FONT, "#ff0000", "center");
     });
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    drawText(ctx, "LT/RT or Q/E thrust    Start/P pause", CENTER_X, 560, 21, "#ffffff", "center");
+    ctx.restore();
+  }
+
+  drawFlightHint(ctx) {
+    drawText(ctx, "LT/RT or Q/E thrust    Start/P pause", CENTER_X, 640, 21, "#ffffff", "center");
+    drawText(ctx, "A/Enter to start", CENTER_X, 675, 21, "#ffffff", "center");
   }
 
   pollGameOver(input) {

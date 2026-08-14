@@ -27,6 +27,8 @@ let landerAlpha = null;
 let accumulator = 0;
 let lastTime = 0;
 let running = false;
+let flightHintActive = false;
+let flightHintArmed = true;
 
 async function preloadLevels() {
   for (const level of LEVELS) {
@@ -48,6 +50,10 @@ function startLevel(name) {
   };
   lander.reset(currentLevel.data.gravity, currentLevel.data.friction);
   audio.resetGameCues();
+  if (flightHintArmed) {
+    flightHintActive = true;
+    flightHintArmed = false;
+  }
   state = "Game";
 }
 
@@ -138,7 +144,14 @@ function update() {
       break;
     }
     case "Game":
-      updateGame();
+      if (flightHintActive) {
+        if (input.pressed("a") || input.pressed("start")) {
+          audio.play("click", 0.6);
+          flightHintActive = false;
+        }
+      } else {
+        updateGame();
+      }
       break;
     case "PauseMenu": {
       const choice = menus.pollPause(input);
@@ -190,6 +203,7 @@ function draw() {
       break;
     case "Game":
       drawGame(ctx, assets.images, lander, currentLevel.background, currentLevel.ground);
+      if (flightHintActive) menus.drawFlightHint(ctx);
       break;
     case "PauseMenu":
       drawGame(ctx, assets.images, lander, currentLevel.background, currentLevel.ground);
