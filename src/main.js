@@ -102,11 +102,19 @@ function update() {
       } else if (choice === "High Scores") {
         menus.resetHighScores();
         state = "HighScoresMenu";
+      } else if (choice === "Controls") {
+        state = "ControlsMenu";
       }
       break;
     }
     case "HighScoresMenu":
       if (menus.pollHighScores(input)) {
+        menus.resetStart();
+        state = "StartMenu";
+      }
+      break;
+    case "ControlsMenu":
+      if (menus.pollControls(input)) {
         menus.resetStart();
         state = "StartMenu";
       }
@@ -165,6 +173,9 @@ function draw() {
       break;
     case "HighScoresMenu":
       menus.drawHighScores(ctx);
+      break;
+    case "ControlsMenu":
+      menus.drawControls(ctx);
       break;
     case "LevelSelectMenu":
       menus.drawLevelSelect(ctx, levelCache);

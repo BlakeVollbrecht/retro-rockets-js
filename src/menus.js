@@ -71,7 +71,7 @@ export class Menus {
 
   pollStart(input) {
     if (this.quitNoticeFrames > 0) this.quitNoticeFrames -= 1;
-    const items = ["Start Game", "High Scores", "Quit"];
+    const items = ["Start Game", "High Scores", "Controls", "Quit"];
     this.startSelection = this.moveVertical(input, items, this.startSelection);
     if (input.pressed("a") || input.pressed("start")) {
       if (this.startSelection === "Quit") {
@@ -92,11 +92,12 @@ export class Menus {
     ctx.drawImage(this.images.logoBack, 290, 120);
     ctx.restore();
     ctx.drawImage(this.images.logo, 290, 120);
-    const boxY = { "Start Game": 278, "High Scores": 349, Quit: 417 };
+    const boxY = { "Start Game": 278, "High Scores": 349, Controls: 417, Quit: 486 };
     ctx.drawImage(this.images.selectionBox, 294, boxY[this.startSelection]);
     drawText(ctx, "Start Game", 515, 350, FONT);
     drawText(ctx, "High Scores", 505, 420, FONT);
-    drawText(ctx, "Quit", 588, 490, FONT);
+    drawText(ctx, "Controls", 535, 490, FONT);
+    drawText(ctx, "Quit", 588, 560, FONT);
 
     if (this.quitNoticeFrames > 0) {
       drawText(ctx, "no longer implemented", 640, 668, FONT, "#ffffff", "center");
@@ -189,6 +190,61 @@ export class Menus {
         drawText(ctx, `${index + 1}.  ${row.name}    ${row.score}`, 640, 230 + index * 42, FONT, "#ffffff", "center");
       });
     }
+    drawText(ctx, "Press B to return to start menu", 300, 585, FONT, "#ffffff");
+  }
+
+  pollControls(input) {
+    if (input.pressed("b")) {
+      this.audio.play("click", 0.6);
+      return true;
+    }
+    if (input.pressed("a") || input.pressed("start")) {
+      this.audio.play("error", 0.5);
+    }
+    return false;
+  }
+
+  drawControls(ctx) {
+    ctx.drawImage(this.images.menuBackground, 0, 0);
+    ctx.save();
+    ctx.globalAlpha = 170 / 255;
+    ctx.drawImage(this.images.logoBack, 300, 520);
+    ctx.drawImage(this.images.logoBack, 300, -10);
+    ctx.restore();
+    ctx.drawImage(this.images.buttonB, 990, 573);
+    drawText(ctx, "Controls", 470, 40, FONT_LARGE);
+
+    ctx.save();
+    ctx.globalAlpha = 170 / 255;
+    ctx.drawImage(this.images.logoBack, 140, 145, 1000, 350);
+    ctx.restore();
+
+    const rows = [
+      ["Action", "Xbox", "Keyboard"],
+      ["Thrust", "Left / Right Trigger", "Q / E"],
+      ["Select", "A", "Enter"],
+      ["Back", "B", "Esc"],
+      ["Pause", "Start", "P"],
+      ["Move", "D-pad / Left Stick", "Arrows / WASD"],
+    ];
+    const colX = [200, 430, 820];
+    rows.forEach((row, index) => {
+      const y = 175 + index * 48;
+      const color = index === 0 ? "#ff0000" : "#ffffff";
+      const size = index === 0 ? 28 : 24;
+      row.forEach((cell, col) => {
+        drawText(ctx, cell, colX[col], y, size, color);
+      });
+    });
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(180, 214);
+    ctx.lineTo(1100, 214);
+    ctx.stroke();
+    ctx.restore();
+
     drawText(ctx, "Press B to return to start menu", 300, 585, FONT, "#ffffff");
   }
 
