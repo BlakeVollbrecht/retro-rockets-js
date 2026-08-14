@@ -1,10 +1,17 @@
-import { drawText, textWidth } from "./render.js";
+import { drawText, drawTextInkCenter } from "./render.js";
 import { LEVELS } from "./levels.js";
 import { scoresFor } from "./scores.js";
 
 const FONT = 35;
 const FONT_LARGE = 56;
 const QUIT_NOTICE_FRAMES = 120;
+const CENTER_X = 640;
+// Visible red outline inside selectionBox.png; the rest of the texture is empty.
+const SELECT_INSET = { x: 188, y: 60, w: 314, h: 81 };
+// Opaque region of logoBack.png; used to center titles in the contrast bars.
+const LOGO_BACK_VISUAL = { x: 19, y: 52, w: 660, h: 87 };
+const HEADER_BAR_Y = -10;
+const BOTTOM_BAR_Y = 520;
 
 export class Menus {
   constructor(images, audio) {
@@ -69,6 +76,32 @@ export class Menus {
     return current;
   }
 
+  drawSelectionBox(ctx, textY) {
+    const img = this.images.selectionBox;
+    const midX = SELECT_INSET.x + SELECT_INSET.w / 2;
+    const midY = SELECT_INSET.y + SELECT_INSET.h / 2;
+    ctx.drawImage(img, CENTER_X - midX, textY + FONT / 2 - midY);
+  }
+
+  drawMenuChrome(ctx, title, button) {
+    const img = this.images.logoBack;
+    const vis = LOGO_BACK_VISUAL;
+    const x = CENTER_X - (vis.x + vis.w / 2);
+    ctx.save();
+    ctx.globalAlpha = 170 / 255;
+    ctx.drawImage(img, x, HEADER_BAR_Y);
+    ctx.drawImage(img, x, BOTTOM_BAR_Y);
+    ctx.restore();
+
+    const headerCy = HEADER_BAR_Y + vis.y + vis.h / 2;
+    drawText(ctx, title, CENTER_X, headerCy, FONT_LARGE, "#ff0000", "center", "middle");
+
+    const bottomBarCy = BOTTOM_BAR_Y + vis.y + vis.h / 2;
+    const buttonImg = button === "A" ? this.images.buttonA : this.images.buttonB;
+    ctx.drawImage(buttonImg, 990, bottomBarCy - buttonImg.height / 2);
+    return { bottomBarCy, bottomBarTextX: x + vis.x + 16 };
+  }
+
   pollStart(input) {
     if (this.quitNoticeFrames > 0) this.quitNoticeFrames -= 1;
     const items = ["Start Game", "High Scores", "Controls", "Quit"];
@@ -92,15 +125,15 @@ export class Menus {
     ctx.drawImage(this.images.logoBack, 290, 120);
     ctx.restore();
     ctx.drawImage(this.images.logo, 290, 120);
-    const boxY = { "Start Game": 278, "High Scores": 349, Controls: 417, Quit: 486 };
-    ctx.drawImage(this.images.selectionBox, 294, boxY[this.startSelection]);
-    drawText(ctx, "Start Game", 515, 350, FONT);
-    drawText(ctx, "High Scores", 505, 420, FONT);
-    drawText(ctx, "Controls", 535, 490, FONT);
-    drawText(ctx, "Quit", 588, 560, FONT);
+    const itemY = { "Start Game": 350, "High Scores": 420, Controls: 490, Quit: 560 };
+    this.drawSelectionBox(ctx, itemY[this.startSelection]);
+    drawText(ctx, "Start Game", CENTER_X, 350, FONT, "#ff0000", "center");
+    drawText(ctx, "High Scores", CENTER_X, 420, FONT, "#ff0000", "center");
+    drawText(ctx, "Controls", CENTER_X, 490, FONT, "#ff0000", "center");
+    drawText(ctx, "Quit", CENTER_X, 560, FONT, "#ff0000", "center");
 
     if (this.quitNoticeFrames > 0) {
-      drawText(ctx, "no longer implemented", 640, 668, FONT, "#ffffff", "center");
+      drawText(ctx, "no longer implemented", CENTER_X, 668, FONT, "#ffffff", "center");
     }
   }
 
@@ -130,13 +163,7 @@ export class Menus {
 
   drawLevelSelect(ctx, levelCache) {
     ctx.drawImage(this.images.menuBackground, 0, 0);
-    ctx.save();
-    ctx.globalAlpha = 170 / 255;
-    ctx.drawImage(this.images.logoBack, 300, 520);
-    ctx.drawImage(this.images.logoBack, 300, -10);
-    ctx.restore();
-    ctx.drawImage(this.images.buttonA, 990, 573);
-    drawText(ctx, "Level Selection", 380, 40, FONT_LARGE);
+    const { bottomBarCy } = this.drawMenuChrome(ctx, "Level Selection", "A");
 
     const level = LEVELS[this.levelIndex];
     const preview = levelCache[level.name];
@@ -144,11 +171,10 @@ export class Menus {
       const scale = 0.5;
       const w = preview.ground.width * scale;
       const h = preview.ground.height * scale;
-      ctx.drawImage(preview.background, 640 - w / 2, 370 - h / 2, w, h);
-      ctx.drawImage(preview.ground, 640 - w / 2, 370 - h / 2, w, h);
+      ctx.drawImage(preview.background, CENTER_X - w / 2, 370 - h / 2, w, h);
+      ctx.drawImage(preview.ground, CENTER_X - w / 2, 370 - h / 2, w, h);
     }
-    const width = textWidth(ctx, level.name, FONT);
-    drawText(ctx, level.name, 640 - width / 2, 617 - FONT / 2, FONT, "#ffffff");
+    drawText(ctx, level.name, CENTER_X, bottomBarCy, FONT, "#ffffff", "center", "middle");
   }
 
   pollHighScores(input) {
@@ -173,24 +199,18 @@ export class Menus {
 
   drawHighScores(ctx) {
     ctx.drawImage(this.images.menuBackground, 0, 0);
-    ctx.save();
-    ctx.globalAlpha = 170 / 255;
-    ctx.drawImage(this.images.logoBack, 300, 520);
-    ctx.drawImage(this.images.logoBack, 300, -10);
-    ctx.restore();
-    ctx.drawImage(this.images.buttonB, 990, 573);
-    drawText(ctx, "High Scores", 430, 40, FONT_LARGE);
+    const { bottomBarCy, bottomBarTextX } = this.drawMenuChrome(ctx, "High Scores", "B");
     const level = LEVELS[this.highScoreLevel];
-    drawText(ctx, level.name, 640, 150, FONT, "#ffffff", "center");
+    drawText(ctx, level.name, CENTER_X, 150, FONT, "#ffffff", "center");
     const rows = scoresFor(level.name);
     if (rows.length === 0) {
-      drawText(ctx, "No scores yet", 640, 280, FONT, "#ff6666", "center");
+      drawText(ctx, "No scores yet", CENTER_X, 280, FONT, "#ff6666", "center");
     } else {
       rows.forEach((row, index) => {
-        drawText(ctx, `${index + 1}.  ${row.name}    ${row.score}`, 640, 230 + index * 42, FONT, "#ffffff", "center");
+        drawText(ctx, `${index + 1}.  ${row.name}    ${row.score}`, CENTER_X, 230 + index * 42, FONT, "#ffffff", "center");
       });
     }
-    drawText(ctx, "Press B to return to start menu", 300, 585, FONT, "#ffffff");
+    drawText(ctx, "Press B to return to start menu", bottomBarTextX, bottomBarCy, FONT, "#ffffff", "left", "middle");
   }
 
   pollControls(input) {
@@ -206,17 +226,25 @@ export class Menus {
 
   drawControls(ctx) {
     ctx.drawImage(this.images.menuBackground, 0, 0);
-    ctx.save();
-    ctx.globalAlpha = 170 / 255;
-    ctx.drawImage(this.images.logoBack, 300, 520);
-    ctx.drawImage(this.images.logoBack, 300, -10);
-    ctx.restore();
-    ctx.drawImage(this.images.buttonB, 990, 573);
-    drawText(ctx, "Controls", 470, 40, FONT_LARGE);
+    const { bottomBarCy, bottomBarTextX } = this.drawMenuChrome(ctx, "Controls", "B");
 
+    const vis = LOGO_BACK_VISUAL;
+    const tableTop = 175;
+    const tableBottom = 175 + 5 * 48 + 24;
+    const padY = 28;
     ctx.save();
     ctx.globalAlpha = 170 / 255;
-    ctx.drawImage(this.images.logoBack, 140, 145, 1000, 350);
+    ctx.drawImage(
+      this.images.logoBack,
+      vis.x,
+      vis.y,
+      vis.w,
+      vis.h,
+      140,
+      tableTop - padY,
+      1000,
+      tableBottom + padY - (tableTop - padY)
+    );
     ctx.restore();
 
     const rows = [
@@ -227,13 +255,13 @@ export class Menus {
       ["Pause", "Start", "P"],
       ["Move", "D-pad / Left Stick", "Arrows / WASD"],
     ];
-    const colX = [200, 430, 820];
+    const colX = [307, 640, 973];
     rows.forEach((row, index) => {
       const y = 175 + index * 48;
       const color = index === 0 ? "#ff0000" : "#ffffff";
       const size = index === 0 ? 28 : 24;
       row.forEach((cell, col) => {
-        drawText(ctx, cell, colX[col], y, size, color);
+        drawText(ctx, cell, colX[col], y, size, color, "center");
       });
     });
     ctx.save();
@@ -245,16 +273,20 @@ export class Menus {
     ctx.stroke();
     ctx.restore();
 
-    drawText(ctx, "Press B to return to start menu", 300, 585, FONT, "#ffffff");
+    drawText(ctx, "Press B to return to start menu", bottomBarTextX, bottomBarCy, FONT, "#ffffff", "left", "middle");
   }
 
-  drawOverlay(ctx, title, selected, selectedYs, itemDraws) {
+  drawOverlay(ctx, title, selected, itemYs, itemDraws) {
     ctx.save();
     ctx.globalAlpha = 170 / 255;
-    ctx.drawImage(this.images.overlay, 312, 109);
+    ctx.drawImage(
+      this.images.overlay,
+      CENTER_X - this.images.overlay.width / 2,
+      109
+    );
     ctx.restore();
-    drawText(ctx, title, 423, 135, FONT_LARGE);
-    ctx.drawImage(this.images.selectionBox, 294, selectedYs[selected] ?? selectedYs[0]);
+    drawText(ctx, title, CENTER_X, 135, FONT_LARGE, "#ff0000", "center");
+    this.drawSelectionBox(ctx, itemYs[selected] ?? Object.values(itemYs)[0]);
     itemDraws();
   }
 
@@ -273,11 +305,11 @@ export class Menus {
   }
 
   drawPause(ctx) {
-    const ys = { Resume: 278, "Restart Level": 349, "Main Menu": 417 };
+    const ys = { Resume: 350, "Restart Level": 420, "Main Menu": 490 };
     this.drawOverlay(ctx, "Pause Menu", this.pauseSelection, ys, () => {
-      drawText(ctx, "Resume", 550, 350, FONT);
-      drawText(ctx, "Restart Level", 497, 420, FONT);
-      drawText(ctx, "Main Menu", 512, 490, FONT);
+      drawText(ctx, "Resume", CENTER_X, 350, FONT, "#ff0000", "center");
+      drawText(ctx, "Restart Level", CENTER_X, 420, FONT, "#ff0000", "center");
+      drawText(ctx, "Main Menu", CENTER_X, 490, FONT, "#ff0000", "center");
     });
   }
 
@@ -292,10 +324,10 @@ export class Menus {
   }
 
   drawGameOver(ctx) {
-    const ys = { "Restart Level": 349, "Main Menu": 417 };
+    const ys = { "Restart Level": 420, "Main Menu": 490 };
     this.drawOverlay(ctx, "Game Over", this.gameOverSelection, ys, () => {
-      drawText(ctx, "Restart Level", 497, 420, FONT);
-      drawText(ctx, "Main Menu", 512, 490, FONT);
+      drawText(ctx, "Restart Level", CENTER_X, 420, FONT, "#ff0000", "center");
+      drawText(ctx, "Main Menu", CENTER_X, 490, FONT, "#ff0000", "center");
     });
   }
 
@@ -336,16 +368,35 @@ export class Menus {
   drawWin(ctx) {
     ctx.save();
     ctx.globalAlpha = 170 / 255;
-    ctx.drawImage(this.images.overlay, 312, 109);
+    ctx.drawImage(
+      this.images.overlay,
+      CENTER_X - this.images.overlay.width / 2,
+      109
+    );
     ctx.restore();
-    const xs = [500, 600, 700];
-    ctx.drawImage(this.images.letterBox, xs[this.letterSelection], 450);
-    drawText(ctx, "Safe Landing", 403, 135, FONT_LARGE);
-    drawText(ctx, "Score:  " + this.score, 403, 250, FONT);
-    drawText(ctx, "Enter Name:", 403, 360, FONT);
+    drawText(ctx, "Safe Landing", CENTER_X, 135, FONT_LARGE, "#ff0000", "center");
+    drawText(ctx, "Score:  " + this.score, CENTER_X, 250, FONT, "#ff0000", "center");
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    drawText(ctx, alphabet[this.letterPositions[0]], 515, 489, FONT);
-    drawText(ctx, alphabet[this.letterPositions[1]], 615, 489, FONT);
-    drawText(ctx, alphabet[this.letterPositions[2]], 715, 489, FONT);
+    const box = this.images.letterBox;
+    const gap = 12;
+    const startX = CENTER_X - (box.width * 3 + gap * 2) / 2;
+    const overlayBottom = 109 + this.images.overlay.height;
+    const groupH = FONT + 18 + box.height;
+    const groupTop = (250 + FONT + overlayBottom - groupH) / 2;
+    drawText(ctx, "Enter Name:", CENTER_X, groupTop, FONT, "#ff0000", "center");
+    const boxY = groupTop + FONT + 18;
+    const slotX = 3 + 68 / 2;
+    const slotY = 28 + 76 / 2;
+    ctx.drawImage(box, startX + this.letterSelection * (box.width + gap), boxY);
+    for (let i = 0; i < 3; i += 1) {
+      const bx = startX + i * (box.width + gap);
+      drawTextInkCenter(
+        ctx,
+        alphabet[this.letterPositions[i]],
+        bx + slotX,
+        boxY + slotY,
+        FONT
+      );
+    }
   }
 }

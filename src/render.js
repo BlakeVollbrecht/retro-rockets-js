@@ -18,13 +18,26 @@ export function drawSprite(ctx, image, x, y, options = {}) {
   ctx.restore();
 }
 
-export function drawText(ctx, text, x, y, size, color = "#ff0000", align = "left") {
+export function drawText(ctx, text, x, y, size, color = "#ff0000", align = "left", baseline = "top") {
   ctx.save();
   ctx.font = `600 ${size}px Oswald, sans-serif`;
   ctx.fillStyle = color;
   ctx.textAlign = align;
-  ctx.textBaseline = "top";
+  ctx.textBaseline = baseline;
   ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+export function drawTextInkCenter(ctx, text, x, y, size, color = "#ff0000") {
+  ctx.save();
+  ctx.font = `600 ${size}px Oswald, sans-serif`;
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  const metrics = ctx.measureText(text);
+  const ascent = metrics.actualBoundingBoxAscent;
+  const descent = metrics.actualBoundingBoxDescent;
+  ctx.fillText(text, x, y + (ascent - descent) / 2);
   ctx.restore();
 }
 
