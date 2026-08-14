@@ -103,9 +103,6 @@ function frame(time) {
 }
 
 function update() {
-  if (audioContext && audioContext.state === "suspended") {
-    audioContext.resume();
-  }
   if (audio) audio.ensureLoops();
   switch (state) {
     case "StartMenu": {
@@ -230,24 +227,44 @@ async function boot() {
   if (document.fonts?.load) {
     await document.fonts.load('35px "Eras Demi ITC"').catch(() => {});
   }
-  audioContext = new AudioContext();
   const images = await loadImages();
   landerAlpha = getAlphaData(images.lander);
   await preloadLevels();
-  let sounds = {};
-  try {
-    sounds = await loadSounds(audioContext);
-  } catch (error) {
-    console.warn(error);
-  }
-  assets = { images, sounds };
-  audio = new AudioBus(audioContext, sounds);
+  assets = { images, sounds: {} };
+  audio = new AudioBus(null, {});
   menus = new Menus(images, audio);
   input = new Input();
   lander = new Lander();
   running = true;
   requestAnimationFrame(frame);
 }
+
+let unlockStarted = false;
+
+async function unlockDevices() {
+  if (unlockStarted) return;
+  unlockStarted = true;
+  try {
+    audioContext = new AudioContext();
+    if (audioContext.state === "suspended") {
+      await audioContext.resume().catch(() => {});
+    }
+    let sounds = {};
+    try {
+      sounds = await loadSounds(audioContext);
+    } catch (error) {
+      console.warn(error);
+    }
+    assets.sounds = sounds;
+    audio.attach(audioContext, sounds);
+    if (input) input.enablePad();
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+window.addEventListener("pointerdown", unlockDevices);
+window.addEventListener("keydown", unlockDevices);
 
 boot().catch((error) => {
   showLoading(error.message);

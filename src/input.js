@@ -26,6 +26,7 @@ export class Input {
     this.current = emptyButtons();
     this.previous = emptyButtons();
     this.keys = new Set();
+    this.padAllowed = false;
     this.padIndex = null;
     this.leftKeyThrust = 0;
     this.rightKeyThrust = 0;
@@ -38,12 +39,10 @@ export class Input {
     });
     window.addEventListener("keyup", (event) => this.keys.delete(event.code));
     window.addEventListener("blur", () => this.keys.clear());
-    window.addEventListener("gamepadconnected", (event) => {
-      this.padIndex = event.gamepad.index;
-    });
-    window.addEventListener("gamepaddisconnected", () => {
-      this.padIndex = null;
-    });
+  }
+
+  enablePad() {
+    this.padAllowed = true;
   }
 
   pressed(name) {
@@ -74,6 +73,7 @@ export class Input {
   }
 
   getPad() {
+    if (!this.padAllowed || document.visibilityState !== "visible") return null;
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     if (this.padIndex != null && pads[this.padIndex]) return pads[this.padIndex];
     const pad = [...pads].find(Boolean) || null;

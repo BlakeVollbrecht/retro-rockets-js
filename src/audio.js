@@ -14,6 +14,15 @@ export class AudioBus {
     this.playedWin = false;
   }
 
+  attach(context, sounds) {
+    this.context = context;
+    this.sounds = sounds || {};
+    this.loopsReady = false;
+    this.leftRocket = silentLoop();
+    this.rightRocket = silentLoop();
+    this.lowFuel = silentLoop();
+  }
+
   createLoop(name) {
     const buffer = this.sounds[name];
     if (!buffer || this.context.state !== "running") return silentLoop();
@@ -29,7 +38,7 @@ export class AudioBus {
   }
 
   ensureLoops() {
-    if (this.loopsReady || this.context.state !== "running") return;
+    if (!this.context || this.loopsReady || this.context.state !== "running") return;
     this.leftRocket = this.createLoop("rumble");
     this.rightRocket = this.createLoop("rumble");
     this.lowFuel = this.createLoop("lowFuel");
@@ -38,7 +47,7 @@ export class AudioBus {
 
   play(name, volume = 1) {
     const buffer = this.sounds[name];
-    if (!buffer || this.context.state !== "running") return;
+    if (!buffer || !this.context || this.context.state !== "running") return;
     const source = this.context.createBufferSource();
     const gain = this.context.createGain();
     source.buffer = buffer;
