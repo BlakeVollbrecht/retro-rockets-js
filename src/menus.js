@@ -4,6 +4,7 @@ import { scoresFor } from "./scores.js";
 
 const FONT = 35;
 const FONT_LARGE = 56;
+const QUIT_NOTICE_FRAMES = 120;
 
 export class Menus {
   constructor(images, audio) {
@@ -17,10 +18,12 @@ export class Menus {
     this.letterSelection = 0;
     this.score = 0;
     this.highScoreLevel = 0;
+    this.quitNoticeFrames = 0;
   }
 
   resetStart() {
     this.startSelection = "Start Game";
+    this.quitNoticeFrames = 0;
   }
 
   resetPause() {
@@ -67,10 +70,16 @@ export class Menus {
   }
 
   pollStart(input) {
+    if (this.quitNoticeFrames > 0) this.quitNoticeFrames -= 1;
     const items = ["Start Game", "High Scores", "Quit"];
     this.startSelection = this.moveVertical(input, items, this.startSelection);
     if (input.pressed("a") || input.pressed("start")) {
-      if (this.startSelection !== "Quit") this.audio.play("click", 0.6);
+      if (this.startSelection === "Quit") {
+        this.audio.play("error", 0.5);
+        this.quitNoticeFrames = QUIT_NOTICE_FRAMES;
+        return "";
+      }
+      this.audio.play("click", 0.6);
       return this.startSelection;
     }
     return "";
@@ -88,6 +97,10 @@ export class Menus {
     drawText(ctx, "Start Game", 515, 350, FONT);
     drawText(ctx, "High Scores", 505, 420, FONT);
     drawText(ctx, "Quit", 588, 490, FONT);
+
+    if (this.quitNoticeFrames > 0) {
+      drawText(ctx, "no longer implemented", 640, 668, FONT, "#ffffff", "center");
+    }
   }
 
   pollLevelSelect(input) {

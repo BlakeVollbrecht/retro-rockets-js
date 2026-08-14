@@ -7,7 +7,6 @@ import { drawGame } from "./render.js";
 import { Menus } from "./menus.js";
 import { LEVELS, getLevel } from "./levels.js";
 import { saveScore } from "./scores.js";
-import { drawText } from "./render.js";
 
 const STEP = 1000 / 60;
 
@@ -29,7 +28,6 @@ let landerAlpha = null;
 let accumulator = 0;
 let lastTime = 0;
 let running = false;
-let thanksTimer = 0;
 
 async function preloadLevels() {
   for (const level of LEVELS) {
@@ -102,9 +100,6 @@ function update() {
       } else if (choice === "High Scores") {
         menus.resetHighScores();
         state = "HighScoresMenu";
-      } else if (choice === "Quit") {
-        state = "Thanks";
-        thanksTimer = 120;
       }
       break;
     }
@@ -155,13 +150,6 @@ function update() {
       }
       break;
     }
-    case "Thanks":
-      thanksTimer -= 1;
-      if (thanksTimer <= 0 || input.pressed("a") || input.pressed("b") || input.pressed("start")) {
-        menus.resetStart();
-        state = "StartMenu";
-      }
-      break;
     default:
       state = "StartMenu";
   }
@@ -193,12 +181,6 @@ function draw() {
     case "WinMenu":
       drawGame(ctx, assets.images, lander, currentLevel.background, currentLevel.ground);
       menus.drawWin(ctx);
-      break;
-    case "Thanks":
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, 1280, 720);
-      ctx.drawImage(assets.images.logo, 290, 220);
-      drawText(ctx, "Thanks for flying", 640, 460, 35, "#ff0000", "center");
       break;
   }
 }
