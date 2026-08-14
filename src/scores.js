@@ -1,4 +1,5 @@
 const STORAGE_KEY = "retrorockets-highscores";
+const LAST_NAME_KEY = "retrorockets-lastname";
 
 function emptyTable() {
   return {};
@@ -12,7 +13,26 @@ export function loadScores() {
   }
 }
 
+export function loadLastName() {
+  try {
+    const name = localStorage.getItem(LAST_NAME_KEY);
+    if (name && /^[A-Z]{3}$/.test(name)) return name;
+  } catch {
+    /* ignore quota / private-mode failures */
+  }
+  return "AAA";
+}
+
+export function saveLastName(name) {
+  try {
+    localStorage.setItem(LAST_NAME_KEY, name);
+  } catch {
+    /* ignore quota / private-mode failures */
+  }
+}
+
 export function saveScore(levelName, playerName, score) {
+  saveLastName(playerName);
   const table = loadScores();
   const list = table[levelName] || [];
   list.push({ name: playerName, score });

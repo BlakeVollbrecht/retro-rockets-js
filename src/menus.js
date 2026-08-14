@@ -1,6 +1,6 @@
 import { drawText, drawTextInkCenter } from "./render.js";
 import { LEVELS } from "./levels.js";
-import { scoresFor } from "./scores.js";
+import { scoresFor, loadLastName } from "./scores.js";
 
 const FONT = 35;
 const FONT_LARGE = 56;
@@ -43,7 +43,7 @@ export class Menus {
 
   resetWin(score) {
     this.score = score;
-    this.letterPositions = [0, 0, 0];
+    this.letterPositions = [...loadLastName()].map((ch) => ch.charCodeAt(0) - 65);
     this.letterSelection = 0;
   }
 
