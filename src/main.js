@@ -123,20 +123,17 @@ function update() {
     }
     case "HighScoresMenu":
       if (menus.pollHighScores(input)) {
-        menus.resetStart();
         state = "StartMenu";
       }
       break;
     case "ControlsMenu":
       if (menus.pollControls(input)) {
-        menus.resetStart();
         state = "StartMenu";
       }
       break;
     case "LevelSelectMenu": {
       const result = menus.pollLevelSelect(input);
       if (result.back) {
-        menus.resetStart();
         state = "StartMenu";
       } else if (result.level) {
         startLevel(result.level);
