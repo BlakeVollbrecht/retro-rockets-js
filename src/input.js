@@ -1,4 +1,5 @@
 const STICK_THRESHOLD = 0.3;
+const KEY_RAMP = 1 / 9;
 
 function emptyButtons() {
   return {
@@ -14,12 +15,20 @@ function emptyButtons() {
   };
 }
 
+function approach(current, target, step) {
+  if (current < target) return Math.min(target, current + step);
+  if (current > target) return Math.max(target, current - step);
+  return current;
+}
+
 export class Input {
   constructor() {
     this.current = emptyButtons();
     this.previous = emptyButtons();
     this.keys = new Set();
     this.padIndex = null;
+    this.leftKeyThrust = 0;
+    this.rightKeyThrust = 0;
 
     window.addEventListener("keydown", (event) => {
       this.keys.add(event.code);
@@ -58,20 +67,43 @@ export class Input {
 
     const leftKey = keys.has("KeyQ") || keys.has("ShiftLeft") || keys.has("ControlLeft");
     const rightKey = keys.has("KeyE") || keys.has("Space") || keys.has("ControlRight");
-    this.current.leftTrigger = Math.max(pad.leftTrigger, leftKey ? 1 : 0);
-    this.current.rightTrigger = Math.max(pad.rightTrigger, rightKey ? 1 : 0);
+    this.leftKeyThrust = approach(this.leftKeyThrust, leftKey ? 1 : 0, KEY_RAMP);
+    this.rightKeyThrust = approach(this.rightKeyThrust, rightKey ? 1 : 0, KEY_RAMP);
+    this.current.leftTrigger = Math.max(pad.leftTrigger, this.leftKeyThrust);
+    this.current.rightTrigger = Math.max(pad.rightTrigger, this.rightKeyThrust);
+  }
+
+  getPad() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    if (this.padIndex != null && pads[this.padIndex]) return pads[this.padIndex];
+    const pad = [...pads].find(Boolean) || null;
+    if (pad) this.padIndex = pad.index;
+    return pad;
+  }
+
+  rumble(strong, weak, ms) {
+    const actuator = this.getPad()?.vibrationActuator;
+    if (!actuator || typeof actuator.playEffect !== "function") return;
+    actuator
+      .playEffect("dual-rumble", {
+        startDelay: 0,
+        duration: ms,
+        strongMagnitude: Math.max(0, Math.min(1, strong)),
+        weakMagnitude: Math.max(0, Math.min(1, weak)),
+      })
+      .catch(() => {});
+  }
+
+  stopRumble() {
+    const actuator = this.getPad()?.vibrationActuator;
+    if (actuator && typeof actuator.reset === "function") {
+      actuator.reset().catch(() => {});
+    }
   }
 
   readPad() {
     const buttons = emptyButtons();
-    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    let pad = null;
-    if (this.padIndex != null && pads[this.padIndex]) {
-      pad = pads[this.padIndex];
-    } else {
-      pad = [...pads].find(Boolean) || null;
-      if (pad) this.padIndex = pad.index;
-    }
+    const pad = this.getPad();
     if (!pad) return buttons;
 
     const b = pad.buttons;

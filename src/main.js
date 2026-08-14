@@ -64,13 +64,20 @@ function updateGame() {
   if (input.pressed("start")) {
     menus.resetPause();
     audio.silenceLoops();
+    input.stopRumble();
     state = "PauseMenu";
   } else if (lander.crashed) {
+    input.rumble(1, 1, 280);
     menus.resetGameOver();
     state = "GameOverMenu";
   } else if (lander.landed) {
+    input.rumble(0.25, 0.4, 180);
     menus.resetWin(lander.calculateScore());
     state = "WinMenu";
+  } else {
+    const left = lander.leftThrust / lander.triggerToThrust;
+    const right = lander.rightThrust / lander.triggerToThrust;
+    if (left > 0.02 || right > 0.02) input.rumble(left * 0.45, right * 0.55, 80);
   }
 }
 
