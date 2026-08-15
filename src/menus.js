@@ -354,11 +354,11 @@ export class Menus {
   }
 
   drawPause(ctx, device) {
-    const ys = { Resume: 350, "Restart Level": 420, "Main Menu": 490 };
+    const ys = { Resume: 310, "Restart Level": 380, "Main Menu": 450 };
     this.drawOverlay(ctx, "Pause Menu", this.pauseSelection, ys, () => {
-      drawText(ctx, "Resume", CENTER_X, 350, FONT, "#ff0000", "center");
-      drawText(ctx, "Restart Level", CENTER_X, 420, FONT, "#ff0000", "center");
-      drawText(ctx, "Main Menu", CENTER_X, 490, FONT, "#ff0000", "center");
+      drawText(ctx, "Resume", CENTER_X, 310, FONT, "#ff0000", "center");
+      drawText(ctx, "Restart Level", CENTER_X, 380, FONT, "#ff0000", "center");
+      drawText(ctx, "Main Menu", CENTER_X, 450, FONT, "#ff0000", "center");
     });
     ctx.save();
     ctx.globalAlpha = 0.9;
