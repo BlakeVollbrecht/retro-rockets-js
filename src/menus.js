@@ -353,7 +353,7 @@ export class Menus {
     return "";
   }
 
-  drawPause(ctx) {
+  drawPause(ctx, device) {
     const ys = { Resume: 350, "Restart Level": 420, "Main Menu": 490 };
     this.drawOverlay(ctx, "Pause Menu", this.pauseSelection, ys, () => {
       drawText(ctx, "Resume", CENTER_X, 350, FONT, "#ff0000", "center");
@@ -362,7 +362,8 @@ export class Menus {
     });
     ctx.save();
     ctx.globalAlpha = 0.9;
-    drawText(ctx, "LT/RT or Q/E thrust    Start/P pause", CENTER_X, 560, 21, "#ffffff", "center");
+    const hint = device === "gamepad" ? "LT/RT thrust" : "Q/E thrust";
+    drawText(ctx, hint, CENTER_X, 560, 21, "#ffffff", "center");
     ctx.restore();
   }
 

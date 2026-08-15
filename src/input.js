@@ -1,4 +1,5 @@
 const STICK_THRESHOLD = 0.3;
+const TRIGGER_THRESHOLD = 0.15;
 const KEY_RAMP = 1 / 9;
 
 function emptyButtons() {
@@ -13,6 +14,42 @@ function emptyButtons() {
     leftTrigger: 0,
     rightTrigger: 0,
   };
+}
+
+function emptyActivity() {
+  return {
+    a: false,
+    b: false,
+    start: false,
+    up: false,
+    down: false,
+    left: false,
+    right: false,
+    leftTrigger: false,
+    rightTrigger: false,
+  };
+}
+
+function padActivity(pad) {
+  return {
+    a: pad.a,
+    b: pad.b,
+    start: pad.start,
+    up: pad.up,
+    down: pad.down,
+    left: pad.left,
+    right: pad.right,
+    leftTrigger: pad.leftTrigger > TRIGGER_THRESHOLD,
+    rightTrigger: pad.rightTrigger > TRIGGER_THRESHOLD,
+  };
+}
+
+function anyActive(activity) {
+  return Object.values(activity).some(Boolean);
+}
+
+function anyNew(current, previous) {
+  return Object.keys(current).some((name) => current[name] && !previous[name]);
 }
 
 function approach(current, target, step) {
@@ -30,6 +67,9 @@ export class Input {
     this.padIndex = null;
     this.leftKeyThrust = 0;
     this.rightKeyThrust = 0;
+    this.lastDevice = "keyboard";
+    this.prevKeys = new Set();
+    this.prevPadActivity = emptyActivity();
 
     window.addEventListener("keydown", (event) => {
       this.keys.add(event.code);
@@ -55,6 +95,7 @@ export class Input {
 
     const pad = this.readPad();
     const keys = this.keys;
+    this.trackDevice(pad, keys);
 
     this.current.a = pad.a || keys.has("Enter") || keys.has("KeyZ");
     this.current.b = pad.b || keys.has("Escape") || keys.has("Backspace") || keys.has("KeyX");
@@ -70,6 +111,21 @@ export class Input {
     this.rightKeyThrust = approach(this.rightKeyThrust, rightKey ? 1 : 0, KEY_RAMP);
     this.current.leftTrigger = Math.max(pad.leftTrigger, this.leftKeyThrust);
     this.current.rightTrigger = Math.max(pad.rightTrigger, this.rightKeyThrust);
+  }
+
+  trackDevice(pad, keys) {
+    const activity = padActivity(pad);
+    const keyActive = keys.size > 0;
+    const padActive = anyActive(activity);
+    const newKey = [...keys].some((code) => !this.prevKeys.has(code));
+    const newPad = anyNew(activity, this.prevPadActivity);
+
+    if (newKey) this.lastDevice = "keyboard";
+    else if (newPad) this.lastDevice = "gamepad";
+    else if (keyActive !== padActive) this.lastDevice = keyActive ? "keyboard" : "gamepad";
+
+    this.prevKeys = new Set(keys);
+    this.prevPadActivity = activity;
   }
 
   getPad() {

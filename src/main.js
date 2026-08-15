@@ -199,7 +199,7 @@ function draw() {
       break;
     case "PauseMenu":
       drawGame(ctx, assets.images, lander, currentLevel.background, currentLevel.ground);
-      menus.drawPause(ctx);
+      menus.drawPause(ctx, input.lastDevice);
       break;
     case "GameOverMenu":
       drawGame(ctx, assets.images, lander, currentLevel.background, currentLevel.ground);
