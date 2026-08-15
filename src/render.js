@@ -1,4 +1,16 @@
 const FONT_FAMILY = '"Eras Demi ITC", sans-serif';
+const KEY_FONT_FAMILY = "Oswald, sans-serif";
+
+let keyFontLinked = false;
+
+function ensureKeyFont() {
+  if (keyFontLinked || typeof document === "undefined") return;
+  keyFontLinked = true;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap";
+  document.head.appendChild(link);
+}
 
 export function drawSprite(ctx, image, x, y, options = {}) {
   const {
@@ -49,6 +61,39 @@ export function textWidth(ctx, text, size) {
   const width = ctx.measureText(text).width;
   ctx.restore();
   return width;
+}
+
+export function drawKeyText(ctx, text, x, y, size, color = "#ffffff", align = "center", baseline = "top") {
+  ensureKeyFont();
+  ctx.save();
+  ctx.font = `600 ${size}px ${KEY_FONT_FAMILY}`;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = baseline;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+export function drawKeyedHint(ctx, keys, rest, x, y, size, color = "#ffffff") {
+  ensureKeyFont();
+  const keyFont = `600 ${size}px ${KEY_FONT_FAMILY}`;
+  const restFont = `${size}px ${FONT_FAMILY}`;
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.font = keyFont;
+  const keyWidth = ctx.measureText(keys).width;
+  ctx.font = restFont;
+  const spaceWidth = ctx.measureText(" ").width;
+  const restWidth = ctx.measureText(rest).width;
+  let cursor = x - (keyWidth + spaceWidth + restWidth) / 2;
+  ctx.font = keyFont;
+  ctx.fillText(keys, cursor, y);
+  cursor += keyWidth + spaceWidth;
+  ctx.font = restFont;
+  ctx.fillText(rest, cursor, y);
+  ctx.restore();
 }
 
 export function drawGame(ctx, images, lander, background, ground) {

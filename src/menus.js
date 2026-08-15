@@ -1,4 +1,4 @@
-import { drawText, drawTextInkCenter } from "./render.js";
+import { drawText, drawTextInkCenter, drawKeyText, drawKeyedHint } from "./render.js";
 import { LEVELS } from "./levels.js";
 import { scoresFor, loadLastName, formatScoreDate, scorePlacement } from "./scores.js";
 
@@ -308,10 +308,16 @@ export class Menus {
           iconSize,
           iconSize
         );
-      } else {
+      } else if (row.header) {
         drawText(ctx, row.xbox, colX[1], y, size, color, "center");
+      } else {
+        drawKeyText(ctx, row.xbox, colX[1], y, size, color, "center");
       }
-      drawText(ctx, row.keyboard, colX[2], y, size, color, "center");
+      if (row.header) {
+        drawText(ctx, row.keyboard, colX[2], y, size, color, "center");
+      } else {
+        drawKeyText(ctx, row.keyboard, colX[2], y, size, color, "center");
+      }
     });
     ctx.save();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
@@ -362,8 +368,8 @@ export class Menus {
     });
     ctx.save();
     ctx.globalAlpha = 0.9;
-    const hint = device === "gamepad" ? "LT/RT thrust" : "Q/E thrust";
-    drawText(ctx, hint, CENTER_X, 560, 21, "#ffffff", "center");
+    const keys = device === "gamepad" ? "LT/RT" : "Q/E";
+    drawKeyedHint(ctx, keys, "thrust", CENTER_X, 560, 21, "#ffffff");
     ctx.restore();
   }
 
