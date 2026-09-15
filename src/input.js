@@ -2,6 +2,17 @@ const STICK_THRESHOLD = 0.3;
 const TRIGGER_THRESHOLD = 0.15;
 const KEY_RAMP = 1 / 9;
 
+// Standard Gamepad mapping (https://w3c.github.io/gamepad/#remapping).
+// Xbox pads report mapping === "standard" in Chromium and Firefox.
+const BTN = { a: 0, b: 1, lt: 6, rt: 7, start: 9, up: 12, down: 13, left: 14, right: 15 };
+const AXIS = { leftX: 0, leftY: 1 };
+
+// One rumble effect at a time; refresh it only when it is about to end or the
+// requested strength changes noticeably. Sending a new effect every physics
+// tick floods the pad with haptic reports.
+const RUMBLE_REFRESH_MS = 60;
+const RUMBLE_DELTA = 0.1;
+
 function emptyButtons() {
   return {
     a: false,
@@ -58,18 +69,37 @@ function approach(current, target, step) {
   return current;
 }
 
+function clamp01(value) {
+  return Math.max(0, Math.min(1, value));
+}
+
+function readGamepads() {
+  if (typeof navigator.getGamepads !== "function") return [];
+  try {
+    // Browsers pad the array with null for empty slots.
+    return Array.from(navigator.getGamepads() || []);
+  } catch {
+    return [];
+  }
+}
+
 export class Input {
   constructor() {
     this.current = emptyButtons();
     this.previous = emptyButtons();
     this.keys = new Set();
-    this.padAllowed = false;
     this.padIndex = null;
+    this.padId = "";
+    this.padButtons = emptyButtons();
+    this.padActive = false;
     this.leftKeyThrust = 0;
     this.rightKeyThrust = 0;
     this.lastDevice = "keyboard";
     this.prevKeys = new Set();
     this.prevPadActivity = emptyActivity();
+    this.rumbleUntil = 0;
+    this.rumbleStrong = 0;
+    this.rumbleWeak = 0;
 
     window.addEventListener("keydown", (event) => {
       this.keys.add(event.code);
@@ -79,21 +109,77 @@ export class Input {
     });
     window.addEventListener("keyup", (event) => this.keys.delete(event.code));
     window.addEventListener("blur", () => this.keys.clear());
+
+    // The browser only fires gamepadconnected after a button has been pressed
+    // on the pad while the page is open (user activation for gamepads).
+    window.addEventListener("gamepadconnected", (event) => this.adoptPad(event.gamepad));
+    window.addEventListener("gamepaddisconnected", (event) => {
+      if (event.gamepad && event.gamepad.index === this.padIndex) {
+        console.info(`gamepad disconnected: ${event.gamepad.id}`);
+        this.padIndex = null;
+        this.padId = "";
+        this.padButtons = emptyButtons();
+        this.rumbleUntil = 0;
+      }
+    });
   }
 
-  enablePad() {
-    this.padAllowed = true;
+  get padConnected() {
+    return this.padIndex != null;
+  }
+
+  adoptPad(gamepad) {
+    if (!gamepad || this.padIndex != null) return;
+    this.padIndex = gamepad.index;
+    this.padId = gamepad.id;
+    console.info(`gamepad connected: ${gamepad.id} (mapping: ${gamepad.mapping || "none"})`);
   }
 
   pressed(name) {
     return this.current[name] && !this.previous[name];
   }
 
+  // Call once per animation frame. Reads the gamepad state snapshot that every
+  // fixed simulation step in that frame will consume.
+  poll() {
+    const pads = readGamepads();
+    let pad = this.padIndex != null ? pads[this.padIndex] : null;
+    if (!pad || pad.connected === false) {
+      // Some browsers expose a pad on the first getGamepads() read without
+      // firing gamepadconnected; pick up the first live one.
+      this.padIndex = null;
+      pad = pads.find((candidate) => candidate && candidate.connected !== false) || null;
+      if (pad) this.adoptPad(pad);
+    }
+    this.padButtons = pad ? this.mapPad(pad) : emptyButtons();
+    this.padActive = anyActive(padActivity(this.padButtons));
+  }
+
+  mapPad(pad) {
+    const buttons = emptyButtons();
+    const b = pad.buttons || [];
+    const axes = pad.axes || [];
+    const value = (index) => (b[index] ? b[index].value : 0);
+    const down = (index) => Boolean(b[index] && (b[index].pressed || b[index].value > 0.5));
+    const axis = (index) => (typeof axes[index] === "number" ? axes[index] : 0);
+
+    buttons.a = down(BTN.a);
+    buttons.b = down(BTN.b);
+    buttons.start = down(BTN.start);
+    buttons.up = down(BTN.up) || axis(AXIS.leftY) < -STICK_THRESHOLD;
+    buttons.down = down(BTN.down) || axis(AXIS.leftY) > STICK_THRESHOLD;
+    buttons.left = down(BTN.left) || axis(AXIS.leftX) < -STICK_THRESHOLD;
+    buttons.right = down(BTN.right) || axis(AXIS.leftX) > STICK_THRESHOLD;
+    buttons.leftTrigger = clamp01(value(BTN.lt));
+    buttons.rightTrigger = clamp01(value(BTN.rt));
+    return buttons;
+  }
+
   beginFrame() {
     this.previous = this.current;
     this.current = emptyButtons();
 
-    const pad = this.readPad();
+    const pad = this.padButtons;
     const keys = this.keys;
     this.trackDevice(pad, keys);
 
@@ -128,54 +214,50 @@ export class Input {
     this.prevPadActivity = activity;
   }
 
-  getPad() {
-    if (!this.padAllowed || document.visibilityState !== "visible") return null;
-    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    if (this.padIndex != null && pads[this.padIndex]) return pads[this.padIndex];
-    const pad = [...pads].find(Boolean) || null;
-    if (pad) this.padIndex = pad.index;
-    return pad;
+  actuator() {
+    if (this.padIndex == null) return null;
+    const pad = readGamepads()[this.padIndex];
+    const actuator = pad?.vibrationActuator;
+    if (!actuator || typeof actuator.playEffect !== "function") return null;
+    if (typeof actuator.canPlayEffectType === "function" && !actuator.canPlayEffectType("dual-rumble")) {
+      return null;
+    }
+    return actuator;
   }
 
   rumble(strong, weak, ms) {
-    const actuator = this.getPad()?.vibrationActuator;
-    if (!actuator || typeof actuator.playEffect !== "function") return;
+    strong = clamp01(strong);
+    weak = clamp01(weak);
+    const now = performance.now();
+    const active = now < this.rumbleUntil;
+    const changed =
+      Math.abs(strong - this.rumbleStrong) > RUMBLE_DELTA || Math.abs(weak - this.rumbleWeak) > RUMBLE_DELTA;
+    if (active && !changed && this.rumbleUntil - now > RUMBLE_REFRESH_MS) return;
+
+    const actuator = this.actuator();
+    if (!actuator) return;
+    this.rumbleUntil = now + ms;
+    this.rumbleStrong = strong;
+    this.rumbleWeak = weak;
     actuator
       .playEffect("dual-rumble", {
         startDelay: 0,
         duration: ms,
-        strongMagnitude: Math.max(0, Math.min(1, strong)),
-        weakMagnitude: Math.max(0, Math.min(1, weak)),
+        strongMagnitude: strong,
+        weakMagnitude: weak,
       })
       .catch(() => {});
   }
 
   stopRumble() {
-    const actuator = this.getPad()?.vibrationActuator;
+    const wasActive = performance.now() < this.rumbleUntil;
+    this.rumbleUntil = 0;
+    this.rumbleStrong = 0;
+    this.rumbleWeak = 0;
+    if (!wasActive) return;
+    const actuator = this.actuator();
     if (actuator && typeof actuator.reset === "function") {
       actuator.reset().catch(() => {});
     }
-  }
-
-  readPad() {
-    const buttons = emptyButtons();
-    const pad = this.getPad();
-    if (!pad) return buttons;
-
-    const b = pad.buttons;
-    const axes = pad.axes;
-    const value = (index) => (b[index] ? b[index].value : 0);
-    const down = (index) => value(index) > 0.5;
-
-    buttons.a = down(0);
-    buttons.b = down(1);
-    buttons.start = down(9);
-    buttons.up = down(12) || (axes[1] ?? 0) < -STICK_THRESHOLD;
-    buttons.down = down(13) || (axes[1] ?? 0) > STICK_THRESHOLD;
-    buttons.left = down(14) || (axes[0] ?? 0) < -STICK_THRESHOLD;
-    buttons.right = down(15) || (axes[0] ?? 0) > STICK_THRESHOLD;
-    buttons.leftTrigger = b[6] ? b[6].value : 0;
-    buttons.rightTrigger = b[7] ? b[7].value : 0;
-    return buttons;
   }
 }

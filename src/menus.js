@@ -147,7 +147,7 @@ export class Menus {
     return "";
   }
 
-  drawStart(ctx) {
+  drawStart(ctx, padConnected = false, soundOn = false) {
     ctx.drawImage(this.images.menuBackground, 0, 0);
     ctx.save();
     ctx.globalAlpha = 170 / 255;
@@ -164,6 +164,16 @@ export class Menus {
     if (this.quitNoticeFrames > 0) {
       drawText(ctx, "no longer implemented", CENTER_X, 668, FONT, "#ffffff", "center");
     }
+
+    ctx.save();
+    if (!soundOn) {
+      ctx.globalAlpha = 0.8;
+      drawText(ctx, "Sound: click or press a key to enable", CENTER_X, 600, 21, "#ffffff", "center");
+    }
+    ctx.globalAlpha = padConnected ? 0.55 : 0.8;
+    const hint = padConnected ? "Controller connected" : "Controller: press any button on it to connect";
+    drawText(ctx, hint, CENTER_X, 630, 21, "#ffffff", "center");
+    ctx.restore();
   }
 
   pollLevelSelect(input) {

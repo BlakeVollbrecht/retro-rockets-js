@@ -14,8 +14,13 @@ From this directory:
 python3 -m http.server 8080
 ```
 
-Then open [http://localhost:8080/](http://localhost:8080/) in Chrome.
+Then open [http://localhost:8080/](http://localhost:8080/) in a browser.
 
-Playing with an Xbox controller is recommended for variable thrust control with the triggers
+High scores are stored in the browser (`localStorage`). Sound starts on the first click or key press (browser autoplay rule); a controller button does not count, so click the page once if you play with a pad only. The start menu shows a hint until sound is on.
 
-High scores are stored in the browser (`localStorage`). Sound may stay silent until the page gets a click or key; that is a browser autoplay rule, not the original game.
+## Xbox controller
+
+Playing with an Xbox controller is recommended for variable thrust control with the triggers.
+
+The game uses the standard [Gamepad API](https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API): There was an intermittent issue with the gamepad turning off when the game is open (in Chrome specifically). This was resolved but not with full confidence. If you see the issue, one option is to use Edge browser in Windows which seems to have better support for Xbox controllers.
+

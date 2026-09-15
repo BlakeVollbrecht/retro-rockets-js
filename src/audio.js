@@ -23,6 +23,10 @@ export class AudioBus {
     this.lowFuel = silentLoop();
   }
 
+  isRunning() {
+    return Boolean(this.context && this.context.state === "running");
+  }
+
   createLoop(name) {
     const buffer = this.sounds[name];
     if (!buffer || this.context.state !== "running") return silentLoop();

@@ -13,7 +13,6 @@ const STEP = 1000 / 60;
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-let audioContext;
 let assets;
 let audio;
 let menus;
@@ -83,7 +82,8 @@ function updateGame() {
   } else {
     const left = lander.leftThrust / lander.triggerToThrust;
     const right = lander.rightThrust / lander.triggerToThrust;
-    if (left > 0.02 || right > 0.02) input.rumble(left * 0.45, right * 0.55, 80);
+    if (left > 0.02 || right > 0.02) input.rumble(left * 0.45, right * 0.55, 150);
+    else input.stopRumble();
   }
 }
 
@@ -93,6 +93,8 @@ function frame(time) {
   accumulator += Math.min(time - lastTime, 100);
   lastTime = time;
 
+  input.poll();
+  if (input.padActive && !audio.isRunning()) startAudio();
   while (accumulator >= STEP) {
     input.beginFrame();
     update();
@@ -182,7 +184,7 @@ function draw() {
   ctx.clearRect(0, 0, 1280, 720);
   switch (state) {
     case "StartMenu":
-      menus.drawStart(ctx);
+      menus.drawStart(ctx, input.padConnected, audio.isRunning());
       break;
     case "HighScoresMenu":
       menus.drawHighScores(ctx);
@@ -239,32 +241,38 @@ async function boot() {
   requestAnimationFrame(frame);
 }
 
-let unlockStarted = false;
+// Browsers only let a page start audio from a user gesture (autoplay policy),
+// and gamepad buttons do not count as one. The context is created once and
+// resumed on every gesture until it is running; a pending resume() from a pad
+// press resolves on its own once a real click or key arrives.
+let audioContext = null;
 
-async function unlockDevices() {
-  if (unlockStarted) return;
-  unlockStarted = true;
-  try {
-    audioContext = new AudioContext();
-    if (audioContext.state === "suspended") {
-      await audioContext.resume().catch(() => {});
-    }
-    let sounds = {};
+function startAudio() {
+  if (!audio) return;
+  if (!audioContext) {
     try {
-      sounds = await loadSounds(audioContext);
+      audioContext = new AudioContext();
     } catch (error) {
       console.warn(error);
+      return;
     }
-    assets.sounds = sounds;
-    audio.attach(audioContext, sounds);
-    if (input) input.enablePad();
-  } catch (error) {
-    console.warn(error);
+    loadSounds(audioContext)
+      .catch((error) => {
+        console.warn(error);
+        return {};
+      })
+      .then((sounds) => {
+        assets.sounds = sounds;
+        audio.attach(audioContext, sounds);
+      });
+  }
+  if (audioContext.state !== "running") {
+    audioContext.resume().catch(() => {});
   }
 }
 
-window.addEventListener("pointerdown", unlockDevices);
-window.addEventListener("keydown", unlockDevices);
+window.addEventListener("pointerdown", startAudio);
+window.addEventListener("keydown", startAudio);
 
 boot().catch((error) => {
   showLoading(error.message);
