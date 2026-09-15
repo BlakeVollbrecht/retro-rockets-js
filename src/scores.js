@@ -1,5 +1,6 @@
 const STORAGE_KEY = "retrorockets-highscores";
 const LAST_NAME_KEY = "retrorockets-lastname";
+const MAX_HIGH_SCORES = 5;
 
 function emptyTable() {
   return {};
@@ -37,13 +38,13 @@ export function saveScore(levelName, playerName, score) {
   const list = table[levelName] || [];
   list.push({ name: playerName, score, at: Date.now() });
   list.sort((a, b) => b.score - a.score);
-  table[levelName] = list.slice(0, 8);
+  table[levelName] = list.slice(0, MAX_HIGH_SCORES);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(table));
   return table[levelName];
 }
 
 export function scoresFor(levelName) {
-  return loadScores()[levelName] || [];
+  return (loadScores()[levelName] || []).slice(0, MAX_HIGH_SCORES);
 }
 
 export function scorePlacement(levelName, score) {
